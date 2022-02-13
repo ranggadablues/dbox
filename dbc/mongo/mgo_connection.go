@@ -10,6 +10,9 @@ import (
 
 	"regexp"
 	"time"
+	
+	"crypto/tls"
+	"net"
 
 	"github.com/eaciit/errorlib"
 	"github.com/eaciit/toolkit"
@@ -116,6 +119,17 @@ func (c *Connection) Connect() error {
 	}
 
 	//sess, e := mgo.Dial(info.Addrs[0])
+	
+	// adding TLS here
+	isTls := ci.Settings.GetInt("tls")
+	if isTls > 0 {
+		tlsConfig := &tls.Config{}
+		info.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+			conn, err := tls.Dial("tcp", addr.String(), tlsConfig)
+			return conn, err
+		}
+	}
+	
 	sess, e := mgo.DialWithInfo(info)
 	if e != nil {
 		return errorlib.Error(packageName, modConnection,
